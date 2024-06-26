@@ -2,12 +2,15 @@ package com.chatroom.server;
 
 import com.chatroom.common.message.*;
 import com.chatroom.util.NetworkUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Objects;
+
+import static com.chatroom.common.message.SystemReply.*;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
@@ -46,40 +49,46 @@ public class ClientHandler implements Runnable {
     private void authenticate() throws IOException, ClassNotFoundException {
         String username, password;
         while (!authenticated) {
-            out.writeObject(new SystemReply(new TextMessageContent("Enter username:")));
             username = (String) ((SystemRequest) in.readObject()).getContent().getContent();
-            out.writeObject(new SystemReply(new TextMessageContent("Enter password:")));
             password = (String) ((SystemRequest) in.readObject()).getContent().getContent();
 
-            if (server.getUserManager().authenticate(username, password)) {
-                authenticated = true;
-                this.username = username;
+            if (server.getUserManager().isUserExist(username)) {
+                if (server.getUserManager().authenticate(username, password)) {
+                    if (!server.isUserAlreadyLogin(username)) {
+                        authenticated = true;
+                        this.username = username;
+                        out.writeObject(new SystemReply(new TextMessageContent(LOGIN_SUCCESS)));
+                        out.writeObject(new SystemReply(new TextMessageContent("Authentication successful. Welcome to the chat room!")));
+                        server.broadcastMessage(new SystemBroadcast(new TextMessageContent(username + " has joined the chat.")));
+                    } else
+                        out.writeObject(new SystemReply(new TextMessageContent(ALREADY_LOGIN)));
+                } else
+                    out.writeObject(new SystemReply(new TextMessageContent(PASSWORD_INCORRECT)));
+            } else
+                out.writeObject(new SystemReply(new TextMessageContent(USER_NOT_EXIST)));
 
-                out.writeObject(new SystemReply(new TextMessageContent("Authentication successful. Welcome to the chat room!")));
-                server.getLogger().logLogin(username, NetworkUtil.getIpAddress(socket), true);
-                server.broadcastMessage(new SystemBroadcast(new TextMessageContent(username + " has joined the chat.")));
-            } else {
-                out.writeObject(new SystemReply(new TextMessageContent("Authentication failed. Please try again.")));
-                server.getLogger().logLogin(username, NetworkUtil.getIpAddress(socket), false);
-            }
+            server.getLogger().logLogin(username, NetworkUtil.getIpAddress(socket), authenticated);
+
         }
     }
 
-    private void handleClientMessage(Message message) {
+    private void handleClientMessage(@NotNull Message message) {
         switch (message) {
             case UserBroadcastMessage ubm:
                 server.broadcastMessage(ubm);
                 break;
             case UserPrivateMessage upm:
-                boolean userExist = server.sendPrivateMessage(upm);
+                boolean userExist = server.isUserAlreadyLogin(upm.getReceiver());
                 if (!userExist)
                     sendMessage(new SystemReply(new TextMessageContent("User " + upm.getReceiver() + " is not online or existed. Please try again.")));
-                else
-                    sendMessage(message);
+                else {
+                    server.sendPrivateMessage(upm);
+                    sendMessage(upm);
+                }
                 break;
             case SystemRequest sr:
                 if (!Objects.equals(username, sr.getUsername()))
-                    throw new IllegalStateException("Unexpected value: " + message);
+                    throw new IllegalStateException("Unexpected value: " + sr);
                 handleCommand((String) sr.getContent().getContent());
                 break;
             default:
@@ -87,8 +96,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void handleCommand(String command) {
-        System.out.println("command: " + command);
+    private void handleCommand(@NotNull String command) {
         switch (command.toLowerCase()) {
             case "list":
                 sendMessage(new SystemReply(new TextMessageContent("Online users: " + server.getOnlineUsers())));

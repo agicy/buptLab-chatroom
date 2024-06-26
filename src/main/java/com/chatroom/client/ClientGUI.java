@@ -15,13 +15,12 @@ public class ClientGUI extends JFrame {
         this.client = client;
         initComponents();
         addListeners();
-        showLoginDialog();
     }
 
     private void initComponents() {
         setTitle("Chat Room");
         setSize(400, 300);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         chatArea = new JTextArea();
         chatArea.setEditable(false);
@@ -46,6 +45,7 @@ public class ClientGUI extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 client.handleCommand("quit");
+                client.stop();
             }
         });
     }
@@ -58,6 +58,8 @@ public class ClientGUI extends JFrame {
             else
                 client.sendUserMessage(message);
             inputField.setText("");
+        } else {
+            displayMessage("You cannot send empty message.");
         }
     }
 
@@ -76,13 +78,20 @@ public class ClientGUI extends JFrame {
                 "Password:", passwordField
         };
 
-        int option = JOptionPane.showConfirmDialog(this, message, "Login", JOptionPane.OK_CANCEL_OPTION);
-        if (option == JOptionPane.OK_OPTION) {
-            String username = usernameField.getText();
-            String password = new String(passwordField.getPassword());
-            client.authenticate(username, password);
-        } else {
-            System.exit(0);
+        while (!client.isLogin()) {
+            int option = JOptionPane.showConfirmDialog(this, message, "Login", JOptionPane.OK_CANCEL_OPTION);
+            if (option == JOptionPane.OK_OPTION) {
+                String username = usernameField.getText();
+                String password = new String(passwordField.getPassword());
+                client.authenticate(username, password);
+            } else {
+                System.exit(0);
+            }
         }
+    }
+
+
+    public void showLoginErrorMessage(String message) {
+        JOptionPane.showMessageDialog(this, message, "Login Error", JOptionPane.ERROR_MESSAGE);
     }
 }

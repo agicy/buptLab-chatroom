@@ -74,21 +74,15 @@ public class Server {
     }
 
     public void broadcastMessage(Message message) {
-        for (ClientHandler client : clients)
-            if (client != null && client.isAuthenticated()) {
-                System.out.printf("broadcasting message to %s.\n", client.getUsername());
-                client.sendMessage(message);
-            }
+        clients.stream()
+                .filter(client -> client != null && client.isAuthenticated())
+                .forEach(client -> client.sendMessage(message));
     }
 
-    public boolean sendPrivateMessage(UserPrivateMessage message) {
-        for (ClientHandler client : clients)
-            if (client != null && client.isAuthenticated())
-                if (Objects.equals(client.getUsername(), message.getReceiver())) {
-                    client.sendMessage(message);
-                    return true;
-                }
-        return false;
+    public void sendPrivateMessage(UserPrivateMessage message) {
+        clients.stream()
+                .filter(client -> client != null && client.isAuthenticated() && Objects.equals(client.getUsername(), message.getReceiver()))
+                .forEach(client -> client.sendMessage(message));
     }
 
     private void handleServerCommands() {
@@ -116,9 +110,13 @@ public class Server {
 
     public List<String> getOnlineUsers() {
         return clients.stream()
-                .filter(ClientHandler::isAuthenticated)
+                .filter(client -> client != null && client.isAuthenticated())
                 .map(ClientHandler::getUsername)
                 .collect(Collectors.toList());
+    }
+
+    public boolean isUserAlreadyLogin(String username) {
+        return getOnlineUsers().contains(username);
     }
 
     public UserManager getUserManager() {

@@ -2,16 +2,23 @@ package com.chatroom.client;
 
 import com.chatroom.common.Constants;
 import com.chatroom.common.message.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.Objects;
+
+import static com.chatroom.common.message.SystemReply.LOGIN_SUCCESS;
 
 public class Client {
     private Socket socket;
     private ObjectOutputStream out;
+    private ObjectInputStream in;
     private String username;
+    private boolean login = false;
     private boolean isAnonymous;
     private ClientGUI gui;
 
@@ -23,19 +30,28 @@ public class Client {
         new Client().start();
     }
 
+    public boolean isLogin() {
+        return login;
+    }
+
     public void start() {
         try {
             socket = new Socket(Constants.HOST, Constants.PORT);
             out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+            in = new ObjectInputStream(socket.getInputStream());
 
             gui = new ClientGUI(this);
+
+            while (!login)
+                gui.showLoginDialog();
+
             gui.setVisible(true);
 
             Message serverMessage;
             while ((serverMessage = (Message) in.readObject()) != null) {
                 handleServerMessage(serverMessage);
             }
+        } catch (SocketException ignored) {
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Error connecting to server: " + e.getMessage());
         } finally {
@@ -45,15 +61,17 @@ public class Client {
 
     public void stop() {
         try {
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
-            }
+            in.close();
+            out.close();
+            socket.close();
+            login = false;
         } catch (IOException e) {
             System.err.println("Error closing client connection: " + e.getMessage());
         }
+        System.exit(0);
     }
 
-    public void sendUserMessage(String content) {
+    public void sendUserMessage(@NotNull String content) {
         Message message;
         if (content.startsWith("@")) {
             int spaceIndex = content.indexOf(' ');
@@ -80,7 +98,8 @@ public class Client {
     }
 
     public void handleServerMessage(Message message) {
-        gui.displayMessage(Messages.getMessagePrefix(message, username) + Messages.getMessageContent(message));
+        if (login)
+            gui.displayMessage(Messages.getMessagePrefix(message, username) + Messages.getMessageContent(message));
     }
 
     public void sendSystemRequest(MessageContent content) {
@@ -95,9 +114,19 @@ public class Client {
         this.username = username;
         sendSystemRequest(new TextMessageContent(username));
         sendSystemRequest(new TextMessageContent(password));
+        try {
+            SystemReply serverMessage = (SystemReply) in.readObject();
+            String result = (String) serverMessage.getContent().getContent();
+            if (Objects.equals(result, LOGIN_SUCCESS))
+                login = true;
+            else
+                gui.showLoginErrorMessage(result);
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public void handleCommand(String command) {
+    public void handleCommand(@NotNull String command) {
         switch (command.toLowerCase()) {
             case "list":
                 sendSystemRequest(new TextMessageContent("list"));

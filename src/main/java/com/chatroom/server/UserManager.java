@@ -37,4 +37,8 @@ public class UserManager {
     public List<String> getAllUsers() {
         return new ArrayList<>(users.keySet());
     }
+
+    public boolean isUserExist(String username) {
+        return users.containsKey(username);
+    }
 }

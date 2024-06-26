@@ -1,21 +1,23 @@
 package com.chatroom.common.message;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 public class Messages {
-    private static String getFormattedTimestamp(LocalDateTime timestamp) {
+    private static @NotNull String getFormattedTimestamp(@NotNull LocalDateTime timestamp) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         return timestamp.format(formatter);
     }
 
-    private static String getUserBroadcastMessagePrefix(UserBroadcastMessage message, String currentUsername) {
+    private static @NotNull String getUserBroadcastMessagePrefix(@NotNull UserBroadcastMessage message, String currentUsername) {
         String sender = message.isAnonymous() ? "Anonymous" : message.getSender();
         return String.format("%s (%s): ", Objects.equals(message.getSender(), currentUsername) ? sender + "(You)" : sender, getFormattedTimestamp(message.getTimestamp()));
     }
 
-    private static String getUserPrivateMessagePrefix(UserPrivateMessage message, String currentUsername) {
+    private static @NotNull String getUserPrivateMessagePrefix(@NotNull UserPrivateMessage message, String currentUsername) {
         if (Objects.equals(currentUsername, message.getSender()))
             return String.format("(Private from you%s to %s) (%s): ", message.isAnonymous() ? "(Anonymous)" : "", message.getReceiver(), getFormattedTimestamp(message.getTimestamp()));
         if (Objects.equals(currentUsername, message.getReceiver()))
@@ -24,7 +26,7 @@ public class Messages {
     }
 
 
-    private static String getUserMessagePrefix(UserMessage message, String currentUsername) {
+    private static String getUserMessagePrefix(@NotNull UserMessage message, String currentUsername) {
         return switch (message) {
             case UserBroadcastMessage bm -> getUserBroadcastMessagePrefix(bm, currentUsername);
             case UserPrivateMessage pm -> getUserPrivateMessagePrefix(pm, currentUsername);
@@ -32,7 +34,7 @@ public class Messages {
         };
     }
 
-    private static String getSystemMessagePrefix(SystemMessage message) {
+    private static @NotNull String getSystemMessagePrefix(@NotNull SystemMessage message) {
         return switch (message) {
             case SystemBroadcast sb ->
                     String.format("[System Broadcast] (%s): ", getFormattedTimestamp(sb.getTimestamp()));
@@ -42,7 +44,7 @@ public class Messages {
         };
     }
 
-    public static String getMessagePrefix(Message message, String currentUsername) {
+    public static String getMessagePrefix(@NotNull Message message, String currentUsername) {
         return switch (message) {
             case UserMessage um -> getUserMessagePrefix(um, currentUsername);
             case SystemMessage sm -> getSystemMessagePrefix(sm);
@@ -50,7 +52,7 @@ public class Messages {
         };
     }
 
-    public static String getMessageContent(Message message) {
+    public static String getMessageContent(@NotNull Message message) {
         MessageContent messageContent = message.getContent();
         return switch (messageContent) {
             case TextMessageContent tmc -> tmc.getContent();
