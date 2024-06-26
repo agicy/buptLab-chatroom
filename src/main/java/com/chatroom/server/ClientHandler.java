@@ -78,7 +78,7 @@ public class ClientHandler implements Runnable {
                     sendMessage(message);
                 break;
             case SystemRequest sr:
-                if(!Objects.equals(username, sr.getUsername()))
+                if (!Objects.equals(username, sr.getUsername()))
                     throw new IllegalStateException("Unexpected value: " + message);
                 handleCommand((String) sr.getContent().getContent());
                 break;

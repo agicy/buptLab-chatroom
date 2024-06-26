@@ -21,10 +21,10 @@ import static com.chatroom.common.Constants.USER_FILE;
 
 public class Server {
     private final List<ClientHandler> clients;
-    private ServerSocket serverSocket;
     private final UserManager userManager;
     private final Logger logger;
     private final ExecutorService pool;
+    private ServerSocket serverSocket;
     private boolean running;
 
     public Server() {

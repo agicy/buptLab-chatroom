@@ -2,7 +2,6 @@ package com.chatroom.client;
 
 import com.chatroom.common.Constants;
 import com.chatroom.common.message.*;
-import com.chatroom.util.NetworkUtil;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -26,8 +25,6 @@ public class Client {
 
     public void start() {
         try {
-            if(!NetworkUtil.isValidIpAddress(Constants.HOST))
-                throw new IllegalArgumentException("Invalid IP address");
             socket = new Socket(Constants.HOST, Constants.PORT);
             out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
@@ -62,10 +59,16 @@ public class Client {
             int spaceIndex = content.indexOf(' ');
             if (spaceIndex != -1) {
                 String recipient = content.substring(1, spaceIndex);
+                if (recipient.equals(username)) {
+                    gui.displayMessage("You cannot send private messages to yourself");
+                    return;
+                }
                 String privateMessage = content.substring(spaceIndex + 1);
                 message = new UserPrivateMessage(username, isAnonymous, recipient, new TextMessageContent(privateMessage));
-            } else
+            } else {
+                gui.displayMessage("Message cannot be empty");
                 return;
+            }
         } else
             message = new UserBroadcastMessage(username, isAnonymous, new TextMessageContent(content));
 

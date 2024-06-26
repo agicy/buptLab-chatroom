@@ -8,12 +8,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class Logger {
-    private final String logfile ;
+    private final String logfile;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public Logger(String logfile) {
-        this.logfile=logfile;
+        this.logfile = logfile;
     }
+
     public void log(String message) {
         String logMessage = String.format("[%s] %s", LocalDateTime.now().format(formatter), message);
         System.out.println(logMessage);
