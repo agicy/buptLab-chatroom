@@ -59,7 +59,7 @@ public class ClientHandler implements Runnable {
                         this.username = username;
                         out.writeObject(new SystemReply(new TextMessageContent(LOGIN_SUCCESS)));
                         out.writeObject(new SystemReply(new TextMessageContent("Authentication successful. Welcome to the chat room!")));
-                        server.broadcastMessage(new SystemBroadcast(new TextMessageContent(username + " has joined the chat.")));
+                        server.broadcastMessage(new SystemBroadcast(new TextMessageContent(username + " has joined the chat."), "join", username));
                     } else
                         out.writeObject(new SystemReply(new TextMessageContent(ALREADY_LOGIN)));
                 } else
@@ -99,6 +99,8 @@ public class ClientHandler implements Runnable {
     private void handleCommand(@NotNull String command) {
         switch (command.toLowerCase()) {
             case "list":
+                System.out.println(server.getOnlineUsers());
+                sendMessage(new SystemUserList(new TextMessageContent(""), server.getOnlineUsers()));
                 sendMessage(new SystemReply(new TextMessageContent("Online users: " + server.getOnlineUsers())));
                 break;
             case "quit":
@@ -122,7 +124,7 @@ public class ClientHandler implements Runnable {
             server.removeClient(this);
             socket.close();
             if (username != null) {
-                server.broadcastMessage(new SystemBroadcast(new TextMessageContent(username + " has left the chat.")));
+                server.broadcastMessage(new SystemBroadcast(new TextMessageContent(username + " has left the chat."), "left", username));
                 server.getLogger().logLogout(username);
                 username = null;
                 authenticated = false;

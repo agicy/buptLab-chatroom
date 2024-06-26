@@ -14,14 +14,14 @@ public class Messages {
 
     private static @NotNull String getUserBroadcastMessagePrefix(@NotNull UserBroadcastMessage message, String currentUsername) {
         String sender = message.isAnonymous() ? "Anonymous" : message.getSender();
-        return String.format("%s (%s): ", Objects.equals(message.getSender(), currentUsername) ? sender + "(You)" : sender, getFormattedTimestamp(message.getTimestamp()));
+        return String.format("%s\n(%s):", Objects.equals(message.getSender(), currentUsername) ? sender + "(You)" : sender, getFormattedTimestamp(message.getTimestamp()));
     }
 
     private static @NotNull String getUserPrivateMessagePrefix(@NotNull UserPrivateMessage message, String currentUsername) {
         if (Objects.equals(currentUsername, message.getSender()))
-            return String.format("(Private from you%s to %s) (%s): ", message.isAnonymous() ? "(Anonymous)" : "", message.getReceiver(), getFormattedTimestamp(message.getTimestamp()));
+            return String.format("(Private from you%s to %s)\n(%s):", message.isAnonymous() ? "(Anonymous)" : "", message.getReceiver(), getFormattedTimestamp(message.getTimestamp()));
         if (Objects.equals(currentUsername, message.getReceiver()))
-            return String.format("(Private from %s to you) (%s): ", message.isAnonymous() ? "Anonymous" : message.getSender(), getFormattedTimestamp(message.getTimestamp()));
+            return String.format("(Private from %s to you)\n(%s):", message.isAnonymous() ? "Anonymous" : message.getSender(), getFormattedTimestamp(message.getTimestamp()));
         throw new IllegalArgumentException("Unintended private message");
     }
 
@@ -37,9 +37,9 @@ public class Messages {
     private static @NotNull String getSystemMessagePrefix(@NotNull SystemMessage message) {
         return switch (message) {
             case SystemBroadcast sb ->
-                    String.format("[System Broadcast] (%s): ", getFormattedTimestamp(sb.getTimestamp()));
+                    String.format("[System Broadcast]\n(%s):", getFormattedTimestamp(sb.getTimestamp()));
             case SystemReply sreply ->
-                    String.format("[System Reply] (%s): ", getFormattedTimestamp(sreply.getTimestamp()));
+                    String.format("[System Reply]\n(%s):", getFormattedTimestamp(sreply.getTimestamp()));
             default -> throw new IllegalArgumentException("Unintended message type: " + message.getClass());
         };
     }

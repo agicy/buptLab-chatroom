@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.chatroom.client.ChatRoom">
+  <grid id="27dc6" binding="chatRoom" layout-manager="GridLayoutManager" row-count="3" column-count="5" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+    <margin top="10" left="10" bottom="10" right="10"/>
+    <constraints>
+      <xy x="20" y="20" width="592" height="400"/>
+    </constraints>
+    <properties/>
+    <border type="none" title="简易聊天室" title-justification="2" title-position="2">
+      <font name="SimHei" size="28" style="1"/>
+    </border>
+    <children>
+      <component id="95c0e" class="javax.swing.JTextField" binding="inputField">
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties>
+          <font name="SimSun" size="20" style="0"/>
+          <text value=""/>
+        </properties>
+      </component>
+      <component id="78b51" class="javax.swing.JButton" binding="sendButton">
+        <constraints>
+          <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="SimHei" size="20" style="0"/>
+          <text value="发送"/>
+        </properties>
+      </component>
+      <component id="6d0a8" class="javax.swing.JLabel" binding="currentUsername">
+        <constraints>
+          <grid row="2" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="SimHei" size="20" style="0"/>
+          <text value="Label"/>
+        </properties>
+      </component>
+      <component id="1668b" class="javax.swing.JComboBox" binding="anonymousSelect">
+        <constraints>
+          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="SimSun" size="20" style="0"/>
+          <model>
+            <item value="实名"/>
+            <item value="匿名"/>
+          </model>
+        </properties>
+      </component>
+      <scrollpane id="446d7">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="3" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="6ce56" class="javax.swing.JTextPane" binding="chatContent">
+            <constraints/>
+            <properties>
+              <editable value="false"/>
+            </properties>
+          </component>
+        </children>
+      </scrollpane>
+      <scrollpane id="d2c80">
+        <constraints>
+          <grid row="1" column="3" row-span="1" col-span="2" vsize-policy="7" hsize-policy="0" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="9d176" class="javax.swing.JList" binding="onlineUser">
+            <constraints/>
+            <properties/>
+          </component>
+        </children>
+      </scrollpane>
+      <component id="29382" class="javax.swing.JButton" binding="logoutButton">
+        <constraints>
+          <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="SimHei" size="20" style="0"/>
+          <text value="退出"/>
+        </properties>
+      </component>
+      <component id="c5a7b" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="5" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <font name="FangSong" size="14" style="0"/>
+          <text value="2023-2024 春季学期 北京邮电大学 面向对象程序设计实践（Java）大作业 卢安来"/>
+        </properties>
+      </component>
+    </children>
+  </grid>
+</form>

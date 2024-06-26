@@ -10,3 +10,4 @@ public class SystemReply extends SystemMessage {
         super(content);
     }
 }
+
