@@ -28,9 +28,13 @@ public class ChatRoom extends JFrame {
     private JButton sendButton;
     private JLabel currentUsername;
     private JComboBox<String> anonymousSelect;
-    private JList<String> onlineUser;
+    private JList<String> onlineUserList;
     private JButton logoutButton;
     private JTextPane chatContent;
+    private JScrollPane onlineUserPanel;
+    private JScrollPane messagePanel;
+    private JPanel userInfoPanel;
+    private JLabel onlineUserLabel;
 
     public ChatRoom(Client client) {
         super("简易聊天室-主界面");
@@ -52,6 +56,7 @@ public class ChatRoom extends JFrame {
         setContentPane(chatRoom);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         pack();
+        setLocationRelativeTo(null);
         setVisible(true);
         anonymousSelect.addActionListener(new ActionListener() {
             /**
@@ -83,7 +88,7 @@ public class ChatRoom extends JFrame {
                 client.stop();
             }
         });
-        onlineUser.addListSelectionListener(new ListSelectionListener() {
+        onlineUserList.addListSelectionListener(new ListSelectionListener() {
             /**
              * Called whenever the value of the selection changes.
              *
@@ -91,15 +96,15 @@ public class ChatRoom extends JFrame {
              */
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                if (!onlineUser.isSelectionEmpty()) {
-                    String selectedItem = onlineUser.getSelectedValue();
+                if (!onlineUserList.isSelectionEmpty()) {
+                    String selectedItem = onlineUserList.getSelectedValue();
                     if (inputField.getText().startsWith("@")) {
                         JOptionPane.showMessageDialog(chatRoom, "输入框已经以 @ 开头", "操作错误", JOptionPane.ERROR_MESSAGE);
                     } else {
                         System.out.println("Selected item: " + selectedItem);
                         inputField.setText("@" + selectedItem + " " + inputField.getText());
                     }
-                    onlineUser.clearSelection();
+                    onlineUserList.clearSelection();
                 }
             }
         });
@@ -129,12 +134,12 @@ public class ChatRoom extends JFrame {
 
     public void addUser(String username) {
         onlineUserListModel.addElement(username);
-        onlineUser.setModel(onlineUserListModel);
+        onlineUserList.setModel(onlineUserListModel);
     }
 
     public void delUser(String username) {
         onlineUserListModel.removeElement(username);
-        onlineUser.setModel(onlineUserListModel);
+        onlineUserList.setModel(onlineUserListModel);
     }
 
     public void setUserList(List<String> users) {

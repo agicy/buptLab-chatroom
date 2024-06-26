@@ -14,14 +14,14 @@ public class Messages {
 
     private static @NotNull String getUserBroadcastMessagePrefix(@NotNull UserBroadcastMessage message, String currentUsername) {
         String sender = message.isAnonymous() ? "Anonymous" : message.getSender();
-        return String.format("%s\n(%s):", Objects.equals(message.getSender(), currentUsername) ? sender + "(You)" : sender, getFormattedTimestamp(message.getTimestamp()));
+        return String.format("%s", Objects.equals(message.getSender(), currentUsername) ? sender + "(You)" : sender);
     }
 
     private static @NotNull String getUserPrivateMessagePrefix(@NotNull UserPrivateMessage message, String currentUsername) {
         if (Objects.equals(currentUsername, message.getSender()))
-            return String.format("(Private from you%s to %s)\n(%s):", message.isAnonymous() ? "(Anonymous)" : "", message.getReceiver(), getFormattedTimestamp(message.getTimestamp()));
+            return String.format("(Private from you%s to %s)", message.isAnonymous() ? "(Anonymous)" : "", message.getReceiver());
         if (Objects.equals(currentUsername, message.getReceiver()))
-            return String.format("(Private from %s to you)\n(%s):", message.isAnonymous() ? "Anonymous" : message.getSender(), getFormattedTimestamp(message.getTimestamp()));
+            return String.format("(Private from %s to you)", message.isAnonymous() ? "Anonymous" : message.getSender());
         throw new IllegalArgumentException("Unintended private message");
     }
 
@@ -36,20 +36,18 @@ public class Messages {
 
     private static @NotNull String getSystemMessagePrefix(@NotNull SystemMessage message) {
         return switch (message) {
-            case SystemBroadcast sb ->
-                    String.format("[System Broadcast]\n(%s):", getFormattedTimestamp(sb.getTimestamp()));
-            case SystemReply sreply ->
-                    String.format("[System Reply]\n(%s):", getFormattedTimestamp(sreply.getTimestamp()));
+            case SystemBroadcast sb -> "[System Broadcast]";
+            case SystemReply sreply -> "[System Reply]";
             default -> throw new IllegalArgumentException("Unintended message type: " + message.getClass());
         };
     }
 
     public static String getMessagePrefix(@NotNull Message message, String currentUsername) {
-        return switch (message) {
+        return getFormattedTimestamp(message.getTimestamp()) + "\n" + switch (message) {
             case UserMessage um -> getUserMessagePrefix(um, currentUsername);
             case SystemMessage sm -> getSystemMessagePrefix(sm);
             default -> throw new IllegalArgumentException("Unsupported message type: " + message.getClass());
-        };
+        } + ":";
     }
 
     public static String getMessageContent(@NotNull Message message) {
