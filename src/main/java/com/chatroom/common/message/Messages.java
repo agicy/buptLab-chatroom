@@ -36,8 +36,8 @@ public class Messages {
 
     private static @NotNull String getSystemMessagePrefix(@NotNull SystemMessage message) {
         return switch (message) {
-            case SystemBroadcast sb -> "[System Broadcast]";
-            case SystemReply sreply -> "[System Reply]";
+            case SystemBroadcast ignored -> "[System Broadcast]";
+            case SystemReply ignored -> "[System Reply]";
             default -> throw new IllegalArgumentException("Unintended message type: " + message.getClass());
         };
     }
@@ -53,7 +53,7 @@ public class Messages {
     public static String getMessageContent(@NotNull Message message) {
         MessageContent messageContent = message.getContent();
         return switch (messageContent) {
-            case TextMessageContent tmc -> tmc.getContent();
+            case TextMessageContent tmc -> tmc.getText();
             default -> throw new IllegalStateException("Unsupported message content type: " + messageContent);
         };
     }

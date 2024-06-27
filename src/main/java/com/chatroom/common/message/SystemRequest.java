@@ -11,4 +11,9 @@ public class SystemRequest extends SystemMessage {
     public String getUsername() {
         return this.username;
     }
+
+    @Override
+    public TextMessageContent getContent() {
+        return (TextMessageContent) super.getContent();
+    }
 }

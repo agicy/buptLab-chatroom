@@ -1,8 +1,8 @@
 package com.chatroom.client;
 
-import com.chatroom.common.Constants;
 import com.chatroom.common.message.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -20,7 +20,7 @@ public class Client {
     private ObjectInputStream in;
     private String username;
     private boolean isAnonymous;
-    private ChatRoom chatRoom;
+    private ClientView clientView;
 
     public Client() {
         this.isAnonymous = false;
@@ -32,7 +32,7 @@ public class Client {
 
     public void setAnonymous(boolean anonymous) {
         isAnonymous = anonymous;
-        chatRoom.setAnonymous(anonymous);
+        clientView.setAnonymous(anonymous);
     }
 
     public void sendSystemRequest(MessageContent content) {
@@ -70,14 +70,14 @@ public class Client {
                 System.exit(0);
                 break;
             case "showanonymous":
-                chatRoom.displayMessage("Current chat mode: " + (isAnonymous ? "Anonymous" : "Named"));
+                clientView.displayMessage("Current chat mode: " + (isAnonymous ? "Anonymous" : "Named"));
                 break;
             case "anonymous":
                 setAnonymous(!isAnonymous);
-                chatRoom.displayMessage("Chat mode changed to: " + (isAnonymous ? "Anonymous" : "Named"));
+                clientView.displayMessage("Chat mode changed to: " + (isAnonymous ? "Anonymous" : "Named"));
                 break;
             default:
-                chatRoom.displayMessage("Unknown command. Available commands: list, quit, showanonymous, anonymous");
+                clientView.displayMessage("Unknown command. Available commands: list, quit, showanonymous, anonymous");
         }
     }
 
@@ -85,34 +85,48 @@ public class Client {
         return username;
     }
 
-    public void login() {
+    public boolean connect(String address, String port, boolean isTest) {
         try {
-            socket = new Socket(Constants.HOST, Constants.PORT);
+            socket = new Socket(address, Integer.parseInt(port));
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
-            new LoginFrame(this);
+            if (isTest) {
+                in.close();
+                in = null;
+                out.close();
+                out = null;
+                socket.close();
+                socket = null;
+            }
         } catch (IOException e) {
-            System.err.println("Error connecting to server: " + e.getMessage());
+            System.err.println("Error connecting to " + address + ":" + port);
+            return false;
         }
+        return true;
+    }
+
+    public void login() {
+
+        new LoginFrame(this);
     }
 
     public void loop() {
         SwingWorker<Void, Message> worker = new SwingWorker<>() {
             @Override
-            protected Void doInBackground() {
+            protected @Nullable Void doInBackground() {
                 try {
                     Message serverMessage;
-                    while ((serverMessage = (Message) in.readObject()) != null) {
+                    while ((serverMessage = (Message) in.readObject()) != null)
                         publish(serverMessage);
-                    }
-                } catch (ClassNotFoundException | IOException e) {
-                    System.err.println("Error during the main loop: " + e.getMessage());
+                } catch (Exception ignored) {
+                    JOptionPane.showMessageDialog(clientView, "服务器连接错误", "服务器连接错误", JOptionPane.ERROR_MESSAGE);
+                    stop();
                 }
                 return null;
             }
 
             @Override
-            protected void process(List<Message> chunks) {
+            protected void process(@NotNull List<Message> chunks) {
                 // 处理接收到的消息，例如更新聊天界面
                 for (Message message : chunks) {
                     handleServerMessage(message);
@@ -121,8 +135,8 @@ public class Client {
         };
 
         worker.execute();
-        chatRoom = new ChatRoom(this);
-        chatRoom.setAnonymous(isAnonymous);
+        clientView = new ClientView(this);
+        clientView.setAnonymous(isAnonymous);
         sendSystemRequest(new TextMessageContent("list"));
     }
 
@@ -139,7 +153,7 @@ public class Client {
 
     public void handleUserInput(@NotNull String content) {
         if (content.isEmpty()) {
-            JOptionPane.showMessageDialog(chatRoom, "输入不能为空", "发送错误", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(clientView, "输入不能为空", "发送错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
         if (content.startsWith("@@"))
@@ -148,20 +162,20 @@ public class Client {
             handleUserMessage(content);
     }
 
-    public void handleUserMessage(String content) {
+    public void handleUserMessage(@NotNull String content) {
         Message message;
         if (content.startsWith("@")) {
             int spaceIndex = content.indexOf(' ');
             if (spaceIndex != -1) {
                 String recipient = content.substring(1, spaceIndex);
                 if (recipient.equals(username)) {
-                    JOptionPane.showMessageDialog(chatRoom, "不能给自己发私信", "发送错误", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(clientView, "不能给自己发私信", "发送错误", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 String privateMessage = content.substring(spaceIndex + 1);
                 message = new UserPrivateMessage(username, isAnonymous, recipient, new TextMessageContent(privateMessage));
             } else {
-                JOptionPane.showMessageDialog(chatRoom, "消息不能为空", "发送错误", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(clientView, "消息不能为空", "发送错误", JOptionPane.ERROR_MESSAGE);
                 return;
             }
         } else
@@ -177,17 +191,15 @@ public class Client {
     public void handleServerMessage(Message message) {
         if (message instanceof SystemBroadcast sb) {
             if (Objects.equals(sb.getType(), "join"))
-                chatRoom.addUser(sb.getUsername());
+                clientView.addUser(sb.getUsername());
             if (Objects.equals(sb.getType(), "left"))
-                chatRoom.delUser(sb.getUsername());
+                clientView.delUser(sb.getUsername());
         }
         if (message instanceof SystemUserList sul) {
-            System.out.println("received SystemUserList");
-            System.out.println(sul.getUsers());
-            chatRoom.setUserList(sul.getUsers());
+            clientView.setUserList(sul.getUsers());
             return;
         }
-        chatRoom.addTextMessage(message, username);
+        clientView.addTextMessage(message, username);
     }
 
 

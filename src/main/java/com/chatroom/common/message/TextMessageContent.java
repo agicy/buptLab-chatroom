@@ -7,7 +7,11 @@ public class TextMessageContent extends MessageContent {
         this.text = text;
     }
 
-    public String getContent() {
+    public Object getContent() {
+        return text;
+    }
+
+    public String getText() {
         return text;
     }
 }

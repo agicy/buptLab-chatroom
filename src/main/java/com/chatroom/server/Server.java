@@ -4,11 +4,10 @@ import com.chatroom.common.Constants;
 import com.chatroom.common.message.Message;
 import com.chatroom.common.message.UserPrivateMessage;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -26,6 +25,7 @@ public class Server {
     private final ExecutorService pool;
     private ServerSocket serverSocket;
     private boolean running;
+    private ServerView serverView;
 
     public Server() {
         this.userManager = new UserManager(USER_FILE);
@@ -39,13 +39,17 @@ public class Server {
         new Server().start();
     }
 
-    public void start() {
+    public void output(String message) {
+        serverView.display(message);
+        logger.log(message);
+    }
+
+    private void waitForClient() {
+
         try {
             serverSocket = new ServerSocket(Constants.PORT);
             running = true;
-            logger.log("Server started on port " + Constants.PORT);
-
-            new Thread(this::handleServerCommands).start();
+            output("Server started on port " + Constants.PORT);
 
             while (running) {
                 Socket clientSocket = serverSocket.accept();
@@ -53,24 +57,32 @@ public class Server {
                 clients.add(clientHandler);
                 pool.execute(clientHandler);
             }
-        } catch (IOException e) {
-            logger.log("Error starting server: " + e.getMessage());
+        } catch (SocketException ignored) {
+        } catch (Exception e) {
+            output("Error starting server: " + e.getMessage());
         } finally {
             stop();
         }
     }
 
+    public void start() {
+        serverView = new ServerView(this);
+        new Thread(this::waitForClient).start();
+    }
+
     public void stop() {
         running = false;
         try {
-            if (serverSocket != null && !serverSocket.isClosed()) {
+            if (serverSocket != null && !serverSocket.isClosed())
                 serverSocket.close();
-            }
+            for (ClientHandler clientHandler : clients)
+                clientHandler.close(true);
+            clients.clear();
             pool.shutdown();
-            clients.forEach(ClientHandler::close);
         } catch (IOException e) {
-            logger.log("Error stopping server: " + e.getMessage());
+            output("Error stopping server: " + e.getMessage());
         }
+        System.exit(0);
     }
 
     public void broadcastMessage(Message message) {
@@ -85,26 +97,20 @@ public class Server {
                 .forEach(client -> client.sendMessage(message));
     }
 
-    private void handleServerCommands() {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-            String command;
-            while (running && (command = reader.readLine()) != null) {
-                switch (command.toLowerCase()) {
-                    case "list":
-                        System.out.println("Online users: " + getOnlineUsers());
-                        break;
-                    case "listall":
-                        System.out.println("All users: " + userManager.getAllUsers());
-                        break;
-                    case "quit":
-                        stop();
-                        break;
-                    default:
-                        System.out.println("Unknown command. Available commands: list, listall, quit");
-                }
-            }
-        } catch (IOException e) {
-            logger.log("Error reading server commands: " + e.getMessage());
+    public void handleServerCommands(String command) {
+        switch (command.toLowerCase()) {
+            case "list":
+                output("Online users: " + getOnlineUsers());
+                break;
+            case "listall":
+                output("All users: " + userManager.getAllUsers());
+                break;
+            case "quit":
+                output("quit");
+                stop();
+                break;
+            default:
+                output("Unknown command. Available commands: list, listall, quit");
         }
     }
 
@@ -123,11 +129,8 @@ public class Server {
         return userManager;
     }
 
-    public Logger getLogger() {
-        return logger;
-    }
-
     public void removeClient(ClientHandler clientHandler) {
         clients.remove(clientHandler);
     }
+
 }

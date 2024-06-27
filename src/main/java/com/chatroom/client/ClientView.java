@@ -1,10 +1,7 @@
 package com.chatroom.client;
 
 import com.chatroom.common.Constants;
-import com.chatroom.common.message.Message;
-import com.chatroom.common.message.Messages;
-import com.chatroom.common.message.SystemMessage;
-import com.chatroom.common.message.UserPrivateMessage;
+import com.chatroom.common.message.*;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -19,8 +16,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
+import java.util.Objects;
 
-public class ChatRoom extends JFrame {
+public class ClientView extends JFrame {
     private final Client client;
     private final DefaultListModel<String> onlineUserListModel = new DefaultListModel<>();
     private JPanel chatRoom;
@@ -35,8 +33,12 @@ public class ChatRoom extends JFrame {
     private JScrollPane messagePanel;
     private JPanel userInfoPanel;
     private JLabel onlineUserLabel;
+    private JPanel chatPanel;
+    private JLabel chatLabel;
+    private JLabel inputLabel;
+    private JLabel authorLabel;
 
-    public ChatRoom(Client client) {
+    public ClientView(Client client) {
         super("简易聊天室-主界面");
         this.client = client;
         currentUsername.setText("当前用户: " + client.getUsername());
@@ -98,12 +100,11 @@ public class ChatRoom extends JFrame {
             public void valueChanged(ListSelectionEvent e) {
                 if (!onlineUserList.isSelectionEmpty()) {
                     String selectedItem = onlineUserList.getSelectedValue();
-                    if (inputField.getText().startsWith("@")) {
+                    if (inputField.getText().startsWith("@"))
                         JOptionPane.showMessageDialog(chatRoom, "输入框已经以 @ 开头", "操作错误", JOptionPane.ERROR_MESSAGE);
-                    } else {
-                        System.out.println("Selected item: " + selectedItem);
+                    else
                         inputField.setText("@" + selectedItem + " " + inputField.getText());
-                    }
+
                     onlineUserList.clearSelection();
                 }
             }
@@ -163,16 +164,31 @@ public class ChatRoom extends JFrame {
         if (message instanceof UserPrivateMessage)
             StyleConstants.setForeground(prefixStyle, new Color(118, 3, 137));
 
+
         SimpleAttributeSet textStyle = new SimpleAttributeSet();
         StyleConstants.setFontFamily(textStyle, "SansSerif");
         StyleConstants.setFontSize(textStyle, 20);
 
+        if (message instanceof UserMessage um && Objects.equals(um.getSender(), username)) {
+            StyleConstants.setAlignment(prefixStyle, StyleConstants.ALIGN_RIGHT);
+            StyleConstants.setAlignment(textStyle, StyleConstants.ALIGN_RIGHT);
+        } else {
+            StyleConstants.setAlignment(prefixStyle, StyleConstants.ALIGN_LEFT);
+            StyleConstants.setAlignment(textStyle, StyleConstants.ALIGN_LEFT);
+        }
+
         try {
             doc.insertString(doc.getLength(), prefix + "\n", prefixStyle);
+            doc.setParagraphAttributes(doc.getLength() - prefix.length() - 1, prefix.length() + 1, prefixStyle, false);
+
             doc.insertString(doc.getLength(), "\t" + text + "\n" + "\n", textStyle);
+            doc.setParagraphAttributes(doc.getLength() - text.length() - 3, text.length() + 3, textStyle, false);
         } catch (BadLocationException ex) {
             System.err.println("Error: " + ex.getMessage());
         }
+
+        if (message instanceof UserMessage um && Objects.equals(um.getSender(), username))
+            chatContent.setCaretPosition(chatContent.getDocument().getLength());
     }
 
     public void displayMessage(String message) {
@@ -182,12 +198,16 @@ public class ChatRoom extends JFrame {
         StyleConstants.setFontFamily(textStyle, "Consolas");
         StyleConstants.setFontSize(textStyle, 20);
         StyleConstants.setForeground(textStyle, Color.MAGENTA);
+        StyleConstants.setAlignment(textStyle, StyleConstants.ALIGN_CENTER);
 
         try {
-            doc.insertString(doc.getLength(), "+====\n" + message + "\n" + "=====\n\n", textStyle);
+            doc.insertString(doc.getLength(), message + "\n", textStyle);
+            doc.setParagraphAttributes(doc.getLength() - message.length() - 1, message.length() + 1, textStyle, false);
+
         } catch (BadLocationException ex) {
             System.err.println("Error: " + ex.getMessage());
         }
+        chatContent.setCaretPosition(chatContent.getDocument().getLength());
 
     }
 

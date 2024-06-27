@@ -17,17 +17,7 @@ public class Logger {
 
     public void log(String message) {
         String logMessage = String.format("[%s] %s", LocalDateTime.now().format(formatter), message);
-        System.out.println(logMessage);
         writeToFile(logMessage);
-    }
-
-    public void logLogin(String username, String ip, boolean success) {
-        String status = success ? "successful" : "failed";
-        log(String.format("Login %s for user %s from IP %s", status, username, ip));
-    }
-
-    public void logLogout(String username) {
-        log(String.format("User %s logged out", username));
     }
 
     private void writeToFile(String message) {

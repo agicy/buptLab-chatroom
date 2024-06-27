@@ -4,10 +4,12 @@ import com.chatroom.common.message.*;
 import com.chatroom.util.NetworkUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Objects;
 
 import static com.chatroom.common.message.SystemReply.*;
@@ -25,32 +27,53 @@ public class ClientHandler implements Runnable {
         this.server = server;
     }
 
-    @Override
-    public void run() {
+    private void loop() {
         try {
-            out = new ObjectOutputStream(socket.getOutputStream());
-            in = new ObjectInputStream(socket.getInputStream());
-
-            authenticate();
-
             Message inputMessage;
             while ((inputMessage = (Message) in.readObject()) != null) {
                 handleClientMessage(inputMessage);
                 if (socket.isClosed())
-                    return;
+                    close(false);
             }
+        } catch (SocketException ignored) {
         } catch (IOException | ClassNotFoundException e) {
-            server.getLogger().log("Error handling client: " + e.getMessage());
-        } finally {
-            close();
+            server.output("Error handling client: " + e.getMessage());
         }
     }
 
-    private void authenticate() throws IOException, ClassNotFoundException {
+    @Override
+    public void run() {
+        try {
+            in = new ObjectInputStream(socket.getInputStream());
+            out = new ObjectOutputStream(socket.getOutputStream());
+            if (authenticate())
+                loop();
+        } catch (IOException | ClassNotFoundException e) {
+            server.output("Error handling client: " + e.getMessage());
+        } finally {
+            close(false);
+        }
+
+    }
+
+    public void logLogin(String username, String ip, boolean success) {
+        String status = success ? "successful" : "failed";
+        server.output(String.format("Login %s for user %s from IP %s", status, username, ip));
+    }
+
+    public void logLogout(String username) {
+        server.output(String.format("User %s logged out", username));
+    }
+
+    private boolean authenticate() throws IOException, ClassNotFoundException {
         String username, password;
         while (!authenticated) {
-            username = (String) ((SystemRequest) in.readObject()).getContent().getContent();
-            password = (String) ((SystemRequest) in.readObject()).getContent().getContent();
+            try {
+                username = ((SystemRequest) in.readObject()).getContent().getText();
+                password = ((SystemRequest) in.readObject()).getContent().getText();
+            } catch (EOFException e) {
+                return false;
+            }
 
             if (server.getUserManager().isUserExist(username)) {
                 if (server.getUserManager().authenticate(username, password)) {
@@ -60,6 +83,8 @@ public class ClientHandler implements Runnable {
                         out.writeObject(new SystemReply(new TextMessageContent(LOGIN_SUCCESS)));
                         out.writeObject(new SystemReply(new TextMessageContent("Authentication successful. Welcome to the chat room!")));
                         server.broadcastMessage(new SystemBroadcast(new TextMessageContent(username + " has joined the chat."), "join", username));
+                        logLogin(username, NetworkUtil.getIpAddress(socket), authenticated);
+                        return true;
                     } else
                         out.writeObject(new SystemReply(new TextMessageContent(ALREADY_LOGIN)));
                 } else
@@ -67,9 +92,9 @@ public class ClientHandler implements Runnable {
             } else
                 out.writeObject(new SystemReply(new TextMessageContent(USER_NOT_EXIST)));
 
-            server.getLogger().logLogin(username, NetworkUtil.getIpAddress(socket), authenticated);
-
+            logLogin(username, NetworkUtil.getIpAddress(socket), authenticated);
         }
+        return false;
     }
 
     private void handleClientMessage(@NotNull Message message) {
@@ -99,12 +124,11 @@ public class ClientHandler implements Runnable {
     private void handleCommand(@NotNull String command) {
         switch (command.toLowerCase()) {
             case "list":
-                System.out.println(server.getOnlineUsers());
                 sendMessage(new SystemUserList(new TextMessageContent(""), server.getOnlineUsers()));
                 sendMessage(new SystemReply(new TextMessageContent("Online users: " + server.getOnlineUsers())));
                 break;
             case "quit":
-                close();
+                close(false);
                 break;
             default:
                 sendMessage(new SystemReply(new TextMessageContent("Unknown command. Available commands: list, quit")));
@@ -115,22 +139,24 @@ public class ClientHandler implements Runnable {
         try {
             out.writeObject(message);
         } catch (IOException e) {
-            server.getLogger().log("Error sending message: " + e.getMessage());
+            server.output("Error sending message: " + e.getMessage());
         }
     }
 
-    public void close() {
+    public void close(boolean shutdown) {
         try {
-            server.removeClient(this);
-            socket.close();
+//            server.removeClient(this);
             if (username != null) {
-                server.broadcastMessage(new SystemBroadcast(new TextMessageContent(username + " has left the chat."), "left", username));
-                server.getLogger().logLogout(username);
+                server.removeClient(this);
+                if (!shutdown)
+                    server.broadcastMessage(new SystemBroadcast(new TextMessageContent(username + " has left the chat."), "left", username));
+                logLogout(username);
                 username = null;
                 authenticated = false;
             }
+            socket.close();
         } catch (IOException e) {
-            server.getLogger().log("Error closing client connection: " + e.getMessage());
+            server.output("Error closing client connection: " + e.getMessage());
         }
     }
 
