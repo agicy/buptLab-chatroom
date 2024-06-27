@@ -18,7 +18,11 @@ import java.awt.event.WindowEvent;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * The main client view for the chatroom application.
+ */
 public class ClientView extends JFrame {
+
     private final Client client;
     private final DefaultListModel<String> onlineUserListModel = new DefaultListModel<>();
     private JPanel chatRoom;
@@ -38,11 +42,15 @@ public class ClientView extends JFrame {
     private JLabel inputLabel;
     private JLabel authorLabel;
 
+    /**
+     * Creates a new instance of the client view.
+     *
+     * @param client the associated client
+     */
     public ClientView(Client client) {
         super("简易聊天室-主界面");
         this.client = client;
         currentUsername.setText("当前用户: " + client.getUsername());
-
         sendButton.addActionListener(new ActionListener() {
             /**
              * Invoked when an action occurs.
@@ -82,7 +90,6 @@ public class ClientView extends JFrame {
                 send();
             }
         });
-
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -123,37 +130,64 @@ public class ClientView extends JFrame {
         });
     }
 
+    /**
+     * Sends the user input to the server.
+     */
     private void send() {
         String content = inputField.getText().trim();
         client.handleUserInput(content);
         inputField.setText("");
     }
 
+    /**
+     * Sets the anonymous mode for the client.
+     *
+     * @param isAnonymous true if the client is in anonymous mode, false otherwise
+     */
     public void setAnonymous(boolean isAnonymous) {
         anonymousSelect.setSelectedIndex(isAnonymous ? 1 : 0);
     }
 
+    /**
+     * Adds a user to the online user list.
+     *
+     * @param username the username of the user to add
+     */
     public void addUser(String username) {
         onlineUserListModel.addElement(username);
         onlineUserList.setModel(onlineUserListModel);
     }
 
+    /**
+     * Removes a user from the online user list.
+     *
+     * @param username the username of the user to remove
+     */
     public void delUser(String username) {
         onlineUserListModel.removeElement(username);
         onlineUserList.setModel(onlineUserListModel);
     }
 
+    /**
+     * Sets the list of online users.
+     *
+     * @param users the list of usernames representing online users
+     */
     public void setUserList(List<String> users) {
         onlineUserListModel.clear();
         for (String username : users)
             onlineUserListModel.addElement(username);
     }
 
+    /**
+     * Adds a text message to the chat content.
+     *
+     * @param message  the message to display
+     * @param username the username associated with the message
+     */
     public void addTextMessage(Message message, String username) {
-
         String prefix = Messages.getMessagePrefix(message, username);
         String text = Messages.getMessageContent(message);
-
         StyledDocument doc = chatContent.getStyledDocument();
         SimpleAttributeSet prefixStyle = new SimpleAttributeSet();
         StyleConstants.setBold(prefixStyle, true);
@@ -163,12 +197,9 @@ public class ClientView extends JFrame {
             StyleConstants.setForeground(prefixStyle, Color.BLUE);
         if (message instanceof UserPrivateMessage)
             StyleConstants.setForeground(prefixStyle, new Color(118, 3, 137));
-
-
         SimpleAttributeSet textStyle = new SimpleAttributeSet();
         StyleConstants.setFontFamily(textStyle, "SansSerif");
         StyleConstants.setFontSize(textStyle, 20);
-
         if (message instanceof UserMessage um && Objects.equals(um.getSender(), username)) {
             StyleConstants.setAlignment(prefixStyle, StyleConstants.ALIGN_RIGHT);
             StyleConstants.setAlignment(textStyle, StyleConstants.ALIGN_RIGHT);
@@ -176,30 +207,30 @@ public class ClientView extends JFrame {
             StyleConstants.setAlignment(prefixStyle, StyleConstants.ALIGN_LEFT);
             StyleConstants.setAlignment(textStyle, StyleConstants.ALIGN_LEFT);
         }
-
         try {
             doc.insertString(doc.getLength(), prefix + "\n", prefixStyle);
             doc.setParagraphAttributes(doc.getLength() - prefix.length() - 1, prefix.length() + 1, prefixStyle, false);
-
             doc.insertString(doc.getLength(), "\t" + text + "\n" + "\n", textStyle);
             doc.setParagraphAttributes(doc.getLength() - text.length() - 3, text.length() + 3, textStyle, false);
         } catch (BadLocationException ex) {
             System.err.println("Error: " + ex.getMessage());
         }
-
         if (message instanceof UserMessage um && Objects.equals(um.getSender(), username))
             chatContent.setCaretPosition(chatContent.getDocument().getLength());
     }
 
+    /**
+     * Displays a system message in the chat content.
+     *
+     * @param message the system message to display
+     */
     public void displayMessage(String message) {
         StyledDocument doc = chatContent.getStyledDocument();
-
         SimpleAttributeSet textStyle = new SimpleAttributeSet();
         StyleConstants.setFontFamily(textStyle, "Consolas");
         StyleConstants.setFontSize(textStyle, 20);
         StyleConstants.setForeground(textStyle, Color.MAGENTA);
         StyleConstants.setAlignment(textStyle, StyleConstants.ALIGN_CENTER);
-
         try {
             doc.insertString(doc.getLength(), message + "\n", textStyle);
             doc.setParagraphAttributes(doc.getLength() - message.length() - 1, message.length() + 1, textStyle, false);
@@ -208,7 +239,5 @@ public class ClientView extends JFrame {
             System.err.println("Error: " + ex.getMessage());
         }
         chatContent.setCaretPosition(chatContent.getDocument().getLength());
-
     }
-
 }

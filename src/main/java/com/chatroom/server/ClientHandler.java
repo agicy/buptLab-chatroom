@@ -14,7 +14,11 @@ import java.util.Objects;
 
 import static com.chatroom.common.message.SystemReply.*;
 
+/**
+ * Represents a client handler responsible for managing communication with a connected client.
+ */
 public class ClientHandler implements Runnable {
+
     private final Socket socket;
     private final Server server;
     private ObjectOutputStream out;
@@ -22,11 +26,20 @@ public class ClientHandler implements Runnable {
     private String username;
     private boolean authenticated = false;
 
+    /**
+     * Creates a new instance of the client handler.
+     *
+     * @param socket the client socket
+     * @param server the associated server
+     */
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
     }
 
+    /**
+     * Main loop for handling client messages.
+     */
     private void loop() {
         try {
             Message inputMessage;
@@ -41,6 +54,9 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Handles the main execution logic for the client handler.
+     */
     @Override
     public void run() {
         try {
@@ -56,15 +72,34 @@ public class ClientHandler implements Runnable {
 
     }
 
+    /**
+     * Logs a login attempt.
+     *
+     * @param username the attempted username
+     * @param ip       the IP address of the client
+     * @param success  true if login was successful, false otherwise
+     */
     public void logLogin(String username, String ip, boolean success) {
         String status = success ? "successful" : "failed";
         server.output(String.format("Login %s for user %s from IP %s", status, username, ip));
     }
 
+    /**
+     * Logs a user logout.
+     *
+     * @param username the logged-out username
+     */
     public void logLogout(String username) {
         server.output(String.format("User %s logged out", username));
     }
 
+    /**
+     * Authenticates the client based on provided credentials.
+     *
+     * @return true if authentication is successful, false otherwise
+     * @throws IOException            if an I/O error occurs
+     * @throws ClassNotFoundException if the class of a serialized object cannot be found
+     */
     private boolean authenticate() throws IOException, ClassNotFoundException {
         String username, password;
         while (!authenticated) {
@@ -97,6 +132,11 @@ public class ClientHandler implements Runnable {
         return false;
     }
 
+    /**
+     * Handles incoming messages from the client.
+     *
+     * @param message the received message
+     */
     private void handleClientMessage(@NotNull Message message) {
         switch (message) {
             case UserBroadcastMessage ubm:
@@ -121,6 +161,11 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Handles server commands issued by the client.
+     *
+     * @param command the command to process
+     */
     private void handleCommand(@NotNull String command) {
         switch (command.toLowerCase()) {
             case "list":
@@ -135,6 +180,11 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Sends a message to the client.
+     *
+     * @param message the message to send
+     */
     public void sendMessage(Message message) {
         try {
             out.writeObject(message);
@@ -143,9 +193,13 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Closes the client connection.
+     *
+     * @param shutdown true if the server is shutting down, false otherwise
+     */
     public void close(boolean shutdown) {
         try {
-//            server.removeClient(this);
             if (username != null) {
                 server.removeClient(this);
                 if (!shutdown)
@@ -160,10 +214,20 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    /**
+     * Gets the username associated with this client.
+     *
+     * @return the username
+     */
     public String getUsername() {
         return username;
     }
 
+    /**
+     * Checks if the client is authenticated.
+     *
+     * @return true if authenticated, false otherwise
+     */
     public boolean isAuthenticated() {
         return authenticated;
     }

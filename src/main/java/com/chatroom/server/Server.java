@@ -3,6 +3,7 @@ package com.chatroom.server;
 import com.chatroom.common.Constants;
 import com.chatroom.common.message.Message;
 import com.chatroom.common.message.UserPrivateMessage;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -18,7 +19,11 @@ import java.util.stream.Collectors;
 import static com.chatroom.common.Constants.LOG_FILE;
 import static com.chatroom.common.Constants.USER_FILE;
 
+/**
+ * Represents a chat server that handles client connections and messages.
+ */
 public class Server {
+
     private final List<ClientHandler> clients;
     private final UserManager userManager;
     private final Logger logger;
@@ -27,6 +32,9 @@ public class Server {
     private boolean running;
     private ServerView serverView;
 
+    /**
+     * Constructs a new Server instance.
+     */
     public Server() {
         this.userManager = new UserManager(USER_FILE);
         this.logger = new Logger(LOG_FILE);
@@ -35,17 +43,29 @@ public class Server {
         this.running = false;
     }
 
+    /**
+     * Main method to start the server.
+     *
+     * @param args Command-line arguments (not used)
+     */
     public static void main(String[] args) {
         new Server().start();
     }
 
+    /**
+     * Displays a message on the server view and logs it.
+     *
+     * @param message The message to display and log
+     */
     public void output(String message) {
         serverView.display(message);
         logger.log(message);
     }
 
+    /**
+     * Waits for client connections and handles them.
+     */
     private void waitForClient() {
-
         try {
             serverSocket = new ServerSocket(Constants.PORT);
             running = true;
@@ -65,11 +85,17 @@ public class Server {
         }
     }
 
+    /**
+     * Starts the server by initializing the server view and waiting for clients.
+     */
     public void start() {
         serverView = new ServerView(this);
         new Thread(this::waitForClient).start();
     }
 
+    /**
+     * Stops the server by closing sockets and shutting down the thread pool.
+     */
     public void stop() {
         running = false;
         try {
@@ -85,19 +111,34 @@ public class Server {
         System.exit(0);
     }
 
+    /**
+     * Broadcasts a message to all authenticated clients.
+     *
+     * @param message The message to broadcast
+     */
     public void broadcastMessage(Message message) {
         clients.stream()
                 .filter(client -> client != null && client.isAuthenticated())
                 .forEach(client -> client.sendMessage(message));
     }
 
+    /**
+     * Sends a private message to a specific user.
+     *
+     * @param message The private message to send
+     */
     public void sendPrivateMessage(UserPrivateMessage message) {
         clients.stream()
                 .filter(client -> client != null && client.isAuthenticated() && Objects.equals(client.getUsername(), message.getReceiver()))
                 .forEach(client -> client.sendMessage(message));
     }
 
-    public void handleServerCommands(String command) {
+    /**
+     * Handles server commands based on user input.
+     *
+     * @param command The command to process
+     */
+    public void handleServerCommands(@NotNull String command) {
         switch (command.toLowerCase()) {
             case "list":
                 output("Online users: " + getOnlineUsers());
@@ -114,6 +155,11 @@ public class Server {
         }
     }
 
+    /**
+     * Retrieves a list of online users.
+     *
+     * @return List of online usernames
+     */
     public List<String> getOnlineUsers() {
         return clients.stream()
                 .filter(client -> client != null && client.isAuthenticated())
@@ -121,14 +167,30 @@ public class Server {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Checks if a user is already logged in.
+     *
+     * @param username The username to check
+     * @return True if the user is already logged in, false otherwise
+     */
     public boolean isUserAlreadyLogin(String username) {
         return getOnlineUsers().contains(username);
     }
 
+    /**
+     * Gets the user manager instance.
+     *
+     * @return The user manager
+     */
     public UserManager getUserManager() {
         return userManager;
     }
 
+    /**
+     * Removes a client handler from the list of connected clients.
+     *
+     * @param clientHandler The client handler to remove
+     */
     public void removeClient(ClientHandler clientHandler) {
         clients.remove(clientHandler);
     }
