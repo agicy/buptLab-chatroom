@@ -27,6 +27,7 @@ public class ServerView extends JFrame {
      * @param server the associated server
      */
     public ServerView(Server server) {
+        super("简易聊天室-服务器");
         this.server = server;
 
         // Set up action listeners for input field and send button

@@ -3,7 +3,7 @@
   <grid id="27dc6" binding="loginPanel" layout-manager="GridLayoutManager" row-count="10" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="20" left="35" bottom="20" right="35"/>
     <constraints>
-      <xy x="20" y="20" width="841" height="581"/>
+      <xy x="20" y="20" width="841" height="601"/>
     </constraints>
     <properties/>
     <clientProperties>
@@ -35,7 +35,6 @@
             <properties>
               <font name="SimHei" size="20" style="1"/>
               <text value="登录"/>
-              <toolTipText value="登录"/>
             </properties>
           </component>
           <component id="e615a" class="javax.swing.JButton" binding="ExitButton">
@@ -45,7 +44,6 @@
             <properties>
               <font name="SimHei" size="20" style="1"/>
               <text value="退出"/>
-              <toolTipText value="退出"/>
             </properties>
           </component>
           <hspacer id="3801">
@@ -74,7 +72,6 @@
             <properties>
               <font name="Consolas" size="20" style="0"/>
               <text value=""/>
-              <toolTipText value="用户名"/>
             </properties>
           </component>
           <component id="31034" class="javax.swing.JLabel" binding="usernameLabel">
@@ -110,7 +107,6 @@
             <properties>
               <font name="Consolas" size="20"/>
               <text value=""/>
-              <toolTipText value="密码"/>
             </properties>
           </component>
           <component id="eb242" class="javax.swing.JSeparator">
@@ -153,7 +149,6 @@
             <properties>
               <font name="Consolas" size="16" style="0"/>
               <text value="8888"/>
-              <toolTipText value="端口"/>
             </properties>
           </component>
           <component id="ca77e" class="javax.swing.JTextField" binding="serverAddressField">
@@ -165,7 +160,6 @@
             <properties>
               <font name="Consolas" size="16" style="0"/>
               <text value="localhost"/>
-              <toolTipText value="服务器地址"/>
             </properties>
           </component>
           <component id="b4a9b" class="javax.swing.JLabel" binding="serverAddressLabel">
@@ -196,7 +190,6 @@
               <font name="SimHei" size="20" style="1"/>
               <horizontalTextPosition value="0"/>
               <text value="测试连接"/>
-              <toolTipText value="测试连接"/>
             </properties>
           </component>
         </children>
