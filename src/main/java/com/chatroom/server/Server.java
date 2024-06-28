@@ -39,7 +39,7 @@ public class Server {
         this.userManager = new UserManager(USER_FILE);
         this.logger = new Logger(LOG_FILE);
         this.clients = new CopyOnWriteArrayList<>();
-        this.pool = Executors.newFixedThreadPool(10);
+        this.pool = Executors.newCachedThreadPool();
         this.running = false;
     }
 

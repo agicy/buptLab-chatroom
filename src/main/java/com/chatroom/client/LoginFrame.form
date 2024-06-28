@@ -66,9 +66,9 @@
           <component id="5e55d" class="javax.swing.JTextField" binding="usernameField">
             <constraints>
               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                <minimum-size width="-1" height="36"/>
-                <preferred-size width="150" height="36"/>
-                <maximum-size width="-1" height="36"/>
+                <minimum-size width="300" height="36"/>
+                <preferred-size width="500" height="36"/>
+                <maximum-size width="800" height="36"/>
               </grid>
             </constraints>
             <properties>
@@ -153,6 +153,7 @@
             <properties>
               <font name="Consolas" size="16" style="0"/>
               <text value="8888"/>
+              <toolTipText value="端口"/>
             </properties>
           </component>
           <component id="ca77e" class="javax.swing.JTextField" binding="serverAddressField">
@@ -195,6 +196,7 @@
               <font name="SimHei" size="20" style="1"/>
               <horizontalTextPosition value="0"/>
               <text value="测试连接"/>
+              <toolTipText value="测试连接"/>
             </properties>
           </component>
         </children>
